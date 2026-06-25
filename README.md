@@ -131,7 +131,13 @@ pip install numpy pandas scipy
 python analyse_risque.py
 ```
 
-Le script calcule les ratios financiers de RRG (exercice 2023), estime la VaR (historique, paramétrique, Monte-Carlo) et l'Expected Shortfall aux seuils 95 % et 99 %, et produit la cartographie des risques classée par criticité décroissante.
+Le script calcule les ratios financiers de RRG (exercice 2023), estime la VaR (historique, paramétrique, Monte-Carlo) et l'Expected Shortfall aux seuils 95 % et 99 %, et produit la cartographie des risques classée par criticité décroissante. Une figure est enregistrée sous `figure_risques.png`.
+
+### 4.5 Visualisation
+
+![Risque de marché et cartographie des risques](figure_risques.png)
+
+*À gauche :* la distribution empirique des rendements avec les seuils de **VaR** (orange) et d'**Expected Shortfall** (rouge), illustrant la perte au-delà du quantile. *À droite :* la **matrice de criticité** (probabilité × impact), où la taille et la couleur des bulles encodent le niveau de risque, de *Faible* (vert) à *Critique* (rouge).
 
 ---
 
@@ -149,6 +155,7 @@ Le script calcule les ratios financiers de RRG (exercice 2023), estime la VaR (h
 | Fichier | Description |
 |---|---|
 | `analyse_risque.py` | Outils Python : ratios financiers, VaR/CVaR, cartographie. |
+| `figure_risques.png` | Figure générée : distribution VaR/ES + matrice de criticité. |
 | `gestion_de_risque.pdf` | Rapport final (15 pages) : bilans, graphiques, matrice des risques. |
 | `README.md` | Le présent document. |
 

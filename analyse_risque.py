@@ -18,9 +18,21 @@ Dépendances : numpy, pandas, scipy
 ============================================================================
 """
 
+import sys
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+# Sortie console en UTF-8 (symboles mathématiques : μ, σ, α, €...)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+# matplotlib optionnel (sauvegarde des figures en PNG)
+try:
+    import matplotlib.pyplot as plt
+    _HAS_PLT = True
+except ImportError:
+    _HAS_PLT = False
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +131,45 @@ def cartographie_risques(risques: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Visualisation : distribution VaR/ES + matrice de criticité des risques
+# ---------------------------------------------------------------------------
+def tracer_risques(rendements, risques, alpha=0.95,
+                   fichier="figure_risques.png"):
+    if not _HAS_PLT:
+        print("  (matplotlib absent : graphique ignoré)")
+        return
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+
+    # (a) Distribution des rendements avec VaR et Expected Shortfall
+    var = var_historique(rendements, alpha)
+    es = expected_shortfall(rendements, alpha)
+    ax1.hist(rendements, bins=60, color="steelblue", alpha=0.7, density=True)
+    ax1.axvline(-var, color="orange", lw=2, label=f"VaR {alpha:.0%} = {var:.2%}")
+    ax1.axvline(-es, color="red", lw=2, ls="--", label=f"ES {alpha:.0%} = {es:.2%}")
+    ax1.set_title("Distribution des rendements — VaR & Expected Shortfall")
+    ax1.set_xlabel("Rendement journalier"); ax1.set_ylabel("Densité")
+    ax1.legend(); ax1.grid(alpha=0.3)
+
+    # (b) Matrice de criticité (probabilité × impact)
+    df = cartographie_risques(risques)
+    couleurs = {"Faible": "green", "Modéré": "gold",
+                "Élevé": "orange", "Critique": "red"}
+    ax2.scatter(df["probabilite"], df["impact"],
+                s=df["criticite"] * 200,
+                c=[couleurs[n] for n in df["niveau"]], alpha=0.6, edgecolors="k")
+    for _, r in df.iterrows():
+        ax2.annotate(r["risque"], (r["probabilite"], r["impact"]),
+                     fontsize=7, ha="center")
+    ax2.set_title("Cartographie des risques (taille ∝ criticité)")
+    ax2.set_xlabel("Probabilité"); ax2.set_ylabel("Impact")
+    ax2.set_xlim(0, 1); ax2.set_ylim(0.5, 5.5); ax2.grid(alpha=0.3)
+
+    fig.tight_layout()
+    fig.savefig(fichier, dpi=130)
+    print(f"\n  Figure enregistrée : {fichier}")
+
+
+# ---------------------------------------------------------------------------
 # Démonstration sur les données RRG (exercice 2023, en millions d'euros)
 # ---------------------------------------------------------------------------
 def _demonstration():
@@ -162,6 +213,8 @@ def _demonstration():
         "impact": [5, 4, 3, 4, 4, 3],
     })
     print(cartographie_risques(risques).to_string(index=False))
+
+    tracer_risques(rendements, risques)
 
 
 if __name__ == "__main__":
